@@ -1,0 +1,32 @@
+# Build artifacts
+*.o
+*.out
+*.exe
+*.a
+*.so
+*.dll
+
+# Test harness binaries
+test_run_A
+test_run_B
+test_run_C
+
+# General temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated examples
+examples/sample_traces.txt
+
+# macOS metadata
+.DS_Store
+
+# VSCode / editor folders
+.vscode/
+.idea/
