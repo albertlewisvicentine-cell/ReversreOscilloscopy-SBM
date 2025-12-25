@@ -1,0 +1,66 @@
+git clone https://github.com/albertlewisvicentine-cell/automatic-bassoon.git
+cd automatic-bassoon
+git checkout SilentBugMatrix
+if (argc >= 2) {
+    N = atoi(argv[1]);
+    if (N <= 0) {
+        usage(argv[0]);
+        return 1;
+    }
+}
+if (argc >= 3) {
+    scenario = argv[2];
+}
+if (argc >= 4) {
+    tolerance = atof(argv[3]);
+    if (tolerance < 0.0) tolerance = 1e-12;
+}
+
+size_t size = (size_t)N * N;
+double *A = malloc(size * sizeof(double));
+double *B = malloc(size * sizeof(double));
+double *C_test = malloc(size * sizeof(double));
+double *C_ref = malloc(size * sizeof(double));
+if (!A || !B || !C_test || !C_ref) {
+    fprintf(stderr, "Allocation failed\n");
+    free(A); free(B); free(C_test); free(C_ref);
+    return 1;
+}
+
+/* fill according to scenario */
+if (strcmp(scenario, "increment") == 0) {
+    fill_increment(A, B, N);
+} else if (strcmp(scenario, "identity") == 0) {
+    fill_identity(A, B, N);
+} else if (strcmp(scenario, "random") == 0) {
+    fill_random(A, B, N);
+} else if (strcmp(scenario, "pattern") == 0) {
+    fill_pattern(A, B, N);
+} else {
+    fprintf(stderr, "Unknown scenario '%s'\n", scenario);
+    free(A); free(B); free(C_test); free(C_ref);
+    return 1;
+}
+
+/* zero outputs (reasonable default) */
+for (size_t i = 0; i < size; ++i) {
+    C_test[i] = 0.0;
+    C_ref[i] = 0.0;
+}
+
+/* run broken implementation (linked in) */
+matmul_test_impl(A, B, C_test, N);
+
+/* compute reference */
+matmul_ref(A, B, C_ref, N);
+
+/* compare */
+double max_abs_diff = 0.0;
+double sum_abs_diff = 0.0;
+for (size_t i = 0; i < size; ++i) {
+    double d = fabs(C_ref[i] - C_test[i]);
+    sum_abs_diff += d;
+    if (d > max_abs_diff) max_abs_diff = d;
+}
+
+printf("Matrix multiply test (impl: %s, N=%d, scenario=%s)\n",
